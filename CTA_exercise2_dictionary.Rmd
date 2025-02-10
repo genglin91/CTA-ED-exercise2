@@ -78,7 +78,7 @@ saveRDS(tweets, "data/sentanalysis/newstweets.rds")
 
 You can download the tweets data directly from the source in the following way: the data was collected by Chris Barrie and is stored on his Github page.
 
-```{r, eval = F}
+```{r}
 tweets  <- readRDS(gzcon(url("https://github.com/cjbarrie/CTA-ED/blob/main/data/sentanalysis/newstweets.rds?raw=true")))
 ```
 
@@ -105,6 +105,7 @@ tweets <- tweets %>%
          newspaper = user_name,
          tweet = text)
 
+
 ```
 
 ```{r, echo = F}
@@ -129,6 +130,7 @@ We'll then tidy this further, as in the previous example, by removing stop words
 ```{r}
 tidy_tweets <- tidy_tweets %>%
     filter(!word %in% stop_words$word)
+
 ```
 
 ## Get sentiment dictionaries
@@ -528,5 +530,29 @@ tidy_tweets %>%
 ```
 
 3. Apply the Lexicoder Sentiment Dictionary to the news tweets, but break down the analysis by newspaper
+
+```{r}
+data_dictionary_LSD2015_pos_neg <- data_dictionary_LSD2015[1:2]
+toks_news_lsd <- tokens_lookup(toks_news, dictionary = data_dictionary_LSD2015_pos_neg)
+
+dfm_news_lsd <- dfm(toks_news_lsd) %>% 
+  dfm_group(groups = newspapers) 
+
+tidy_dfm_news_lsd <- dfm_news_lsd %>%
+  convert(to = "data.frame") %>%
+  rename("newspaper" = doc_id) %>%
+  mutate(sentiment = positive - negative)
+
+tidy_dfm_news_lsd %>%
+  ggplot() +
+  geom_point(aes(x=reorder(newspaper, -sentiment), y=sentiment)) +
+  coord_flip() +
+  xlab("Newspapers") + 
+  ylab("Overall tweet sentiment (negative to positive)") + 
+  theme_minimal()
+
+
+```
+
 4. Don't forget to 'knit' to produce your final html output for the exercise.
 
